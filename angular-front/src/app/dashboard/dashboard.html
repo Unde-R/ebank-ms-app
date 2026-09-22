@@ -1,0 +1,91 @@
+<header class="page-head">
+  <div>
+    <h1>Overview</h1>
+    <p class="muted">A snapshot of every account across the bank.</p>
+  </div>
+  <button type="button" class="btn" (click)="service.load()" [disabled]="service.status() === 'loading'">
+    <i class="bi bi-arrow-clockwise"></i> Refresh
+  </button>
+</header>
+
+@if (service.status() === 'error') {
+  <div class="notice error" role="alert">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>
+      <strong>Could not load your data.</strong>
+      <span>{{ service.error() }}. Make sure the gateway is running on port 9999.</span>
+    </div>
+    <button type="button" class="btn" (click)="service.load()">Retry</button>
+  </div>
+} @else {
+  <section class="stats" aria-label="Key figures">
+    <article class="card stat">
+      <span class="stat-label">Total balance</span>
+      <span class="stat-value">{{ service.totalBalance() | currency: currency : 'symbol' : '1.0-0' }}</span>
+      <i class="bi bi-cash-stack stat-icon"></i>
+    </article>
+    <article class="card stat">
+      <span class="stat-label">Accounts</span>
+      <span class="stat-value">{{ service.accounts().length }}</span>
+      <i class="bi bi-wallet2 stat-icon"></i>
+    </article>
+    <article class="card stat">
+      <span class="stat-label">Customers</span>
+      <span class="stat-value">{{ service.customerCount() }}</span>
+      <i class="bi bi-people stat-icon"></i>
+    </article>
+    <article class="card stat">
+      <span class="stat-label">Average balance</span>
+      <span class="stat-value">{{ service.averageBalance() | currency: currency : 'symbol' : '1.0-0' }}</span>
+      <i class="bi bi-graph-up-arrow stat-icon"></i>
+    </article>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Balance by account type</h2>
+      @if (service.byType().length === 0) {
+        <p class="empty">{{ service.status() === 'loading' ? 'Loading…' : 'No accounts yet.' }}</p>
+      } @else {
+        <ul class="bars">
+          @for (t of service.byType(); track t.type) {
+            <li>
+              <div class="bar-head">
+                <span>{{ t.type | accountType }}</span>
+                <span class="muted">{{ t.count }} · {{ t.total | currency: currency : 'symbol' : '1.0-0' }}</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" [class.alt]="isSaving(t.type)" [style.width.%]="(t.total / maxTypeTotal()) * 100"></div>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Latest accounts</h2>
+        <a routerLink="/accounts" class="link">View all</a>
+      </div>
+      @if (recent().length === 0) {
+        <p class="empty">{{ service.status() === 'loading' ? 'Loading…' : 'No accounts yet.' }}</p>
+      } @else {
+        <ul class="list">
+          @for (a of recent(); track a.id) {
+            <li>
+              <span class="avatar" [class.alt]="isSaving(a.type)">
+                <i class="bi" [class]="isSaving(a.type) ? 'bi-piggy-bank' : 'bi-credit-card'"></i>
+              </span>
+              <div class="list-main">
+                <span class="strong">{{ a.type | accountType }}</span>
+                <span class="muted small">Customer #{{ a.customerId }} · {{ a.createdAt | date: 'mediumDate' }}</span>
+              </div>
+              <span class="strong">{{ a.balance | currency: currency }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+}

@@ -1,0 +1,107 @@
+<header class="page-head">
+  <div>
+    <h1>Accounts</h1>
+    <p class="muted">Browse, search and sort every bank account.</p>
+  </div>
+  <button type="button" class="btn" (click)="service.load()" [disabled]="service.status() === 'loading'">
+    <i class="bi bi-arrow-clockwise"></i> Refresh
+  </button>
+</header>
+
+@if (service.status() === 'error') {
+  <div class="notice error" role="alert">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>
+      <strong>Could not load accounts.</strong>
+      <span>{{ service.error() }}. Make sure the gateway is running on port 9999.</span>
+    </div>
+    <button type="button" class="btn" (click)="service.load()">Retry</button>
+  </div>
+} @else {
+  <section class="card panel">
+    <div class="toolbar">
+      <label class="search">
+        <i class="bi bi-search"></i>
+        <input
+          type="search"
+          placeholder="Search by id, customer or type"
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+        />
+      </label>
+
+      <div class="chips" role="group" aria-label="Filter by type">
+        <button type="button" class="chip" [class.on]="typeFilter() === 'ALL'" (click)="typeFilter.set('ALL')">
+          All
+        </button>
+        @for (t of types(); track t) {
+          <button type="button" class="chip" [class.on]="typeFilter() === t" (click)="typeFilter.set(t)">
+            {{ t | accountType }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="summary muted">
+      {{ rows().length }} of {{ service.accounts().length }} accounts ·
+      <strong>{{ filteredTotal() | currency: currency }}</strong> combined
+    </div>
+
+    @if (rows().length === 0) {
+      <div class="empty">
+        <i class="bi bi-inbox"></i>
+        @if (service.status() === 'loading') {
+          <p>Loading accounts…</p>
+        } @else if (service.accounts().length === 0) {
+          <p>There are no accounts yet.</p>
+        } @else {
+          <p>No account matches your filters.</p>
+          <button type="button" class="btn" (click)="clearFilters()">Clear filters</button>
+        }
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th [attr.aria-sort]="ariaSort('id')">
+                <button type="button" (click)="sortBy('id')">Account
+                  @if (sortKey() === 'id') { <i class="bi" [class]="sortDesc() ? 'bi-arrow-down' : 'bi-arrow-up'"></i> }
+                </button>
+              </th>
+              <th>Type</th>
+              <th [attr.aria-sort]="ariaSort('customerId')">
+                <button type="button" (click)="sortBy('customerId')">Customer
+                  @if (sortKey() === 'customerId') { <i class="bi" [class]="sortDesc() ? 'bi-arrow-down' : 'bi-arrow-up'"></i> }
+                </button>
+              </th>
+              <th [attr.aria-sort]="ariaSort('createdAt')">
+                <button type="button" (click)="sortBy('createdAt')">Opened
+                  @if (sortKey() === 'createdAt') { <i class="bi" [class]="sortDesc() ? 'bi-arrow-down' : 'bi-arrow-up'"></i> }
+                </button>
+              </th>
+              <th class="num" [attr.aria-sort]="ariaSort('balance')">
+                <button type="button" (click)="sortBy('balance')">Balance
+                  @if (sortKey() === 'balance') { <i class="bi" [class]="sortDesc() ? 'bi-arrow-down' : 'bi-arrow-up'"></i> }
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (acc of rows(); track acc.id) {
+              <tr>
+                <td class="mono" data-label="Account">{{ acc.id }}</td>
+                <td data-label="Type">
+                  <span class="badge" [class.alt]="isSaving(acc.type)">{{ acc.type | accountType }}</span>
+                </td>
+                <td data-label="Customer">#{{ acc.customerId }}</td>
+                <td data-label="Opened">{{ acc.createdAt | date: 'mediumDate' }}</td>
+                <td class="num strong" data-label="Balance">{{ acc.balance | currency: currency }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}

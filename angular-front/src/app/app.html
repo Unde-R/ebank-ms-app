@@ -1,0 +1,49 @@
+<div class="progress" [class.active]="loading.isLoading()" aria-hidden="true"></div>
+
+<div class="shell">
+  <aside class="sidebar" [class.open]="menuOpen()">
+    <a class="brand" routerLink="/" (click)="menuOpen.set(false)">
+      <span class="brand-mark"><i class="bi bi-bank2"></i></span>
+      <span class="brand-name">Ebank</span>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      @for (link of links; track link.path) {
+        <a
+          class="nav-item"
+          [routerLink]="link.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: link.exact }"
+          (click)="menuOpen.set(false)"
+        >
+          <i class="bi" [class]="link.icon"></i>
+          <span>{{ link.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-foot">
+      <button type="button" class="theme-toggle" (click)="theme.toggle()">
+        <i class="bi" [class]="theme.theme() === 'dark' ? 'bi-sun' : 'bi-moon-stars'"></i>
+        <span>{{ theme.theme() === 'dark' ? 'Light mode' : 'Dark mode' }}</span>
+      </button>
+    </div>
+  </aside>
+
+  @if (menuOpen()) {
+    <button type="button" class="scrim" aria-label="Close menu" (click)="menuOpen.set(false)"></button>
+  }
+
+  <div class="main">
+    <header class="topbar">
+      <button type="button" class="icon-btn menu-btn" aria-label="Open menu" (click)="menuOpen.set(true)">
+        <i class="bi bi-list"></i>
+      </button>
+      <span class="topbar-brand">Ebank</span>
+    </header>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

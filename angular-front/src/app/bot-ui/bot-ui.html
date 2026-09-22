@@ -1,0 +1,59 @@
+<header class="page-head">
+  <div>
+    <h1>Assistant</h1>
+    <p class="muted">Ask questions about customers and accounts in plain language.</p>
+  </div>
+  @if (messages().length) {
+    <button type="button" class="btn" (click)="clear()"><i class="bi bi-arrow-counterclockwise"></i> New chat</button>
+  }
+</header>
+
+<section class="card chat">
+  <div class="thread" #scroller (scroll)="onScroll()" aria-live="polite">
+    @if (messages().length === 0) {
+      <div class="welcome">
+        <span class="spark"><i class="bi bi-stars"></i></span>
+        <h2>How can I help?</h2>
+        <p class="muted">Try one of these to get started.</p>
+        <div class="suggestions">
+          @for (s of suggestions; track s) {
+            <button type="button" class="suggestion" (click)="send(s)">{{ s }}</button>
+          }
+        </div>
+      </div>
+    } @else {
+      @for (m of messages(); track $index) {
+        <div class="msg" [class.user]="m.role === 'user'" [class.error]="m.error">
+          @if (m.role === 'assistant') {
+            <span class="who"><i class="bi bi-stars"></i></span>
+          }
+          <div class="bubble">
+            @if (m.role === 'user') {
+              {{ m.content }}
+            } @else if (m.content) {
+              <markdown [data]="m.content"></markdown>
+            } @else {
+              <span class="typing"><i></i><i></i><i></i></span>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <form class="composer" (submit)="$event.preventDefault(); send()">
+    <textarea
+      name="draft"
+      rows="1"
+      placeholder="Ask about an account or a customer…"
+      [(ngModel)]="draft"
+      (keydown.enter)="onEnter($event)"
+      aria-label="Message"
+    ></textarea>
+    @if (streaming()) {
+      <button type="button" class="send stop" aria-label="Stop" (click)="stop()"><i class="bi bi-stop-fill"></i></button>
+    } @else {
+      <button type="submit" class="send" aria-label="Send" [disabled]="!draft.trim()"><i class="bi bi-arrow-up"></i></button>
+    }
+  </form>
+</section>
